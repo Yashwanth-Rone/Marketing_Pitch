@@ -64,19 +64,7 @@ class PoemFlow(Flow[flowstate]):
         print(result)
         print("======================================================================================================")
         
-        # crew_result = (
-        #     PoemCrew()
-        #     .crew()
-        #     .kickoff(inputs={'topic':'what are the competitor brands for Optimum nutrition gold premium whey protein powder'})
-        # )
-        # print("********************************************************************************************************")
-        # print(crew_result)
-        # print("********************************************************************************************************")
-            # print("*******************************************************")
-            # print("Poem generated", result.raw)
-            # print("*******************************************************")
-            # self.state.searches.append(result.raw)
-
+        
     @listen(summartize)
     def generate_parameters(self):
         print("Generating poem")
@@ -88,7 +76,6 @@ class PoemFlow(Flow[flowstate]):
 
         print("parameters generated", result.raw)
         self.state.params = result.raw
-        # self.state.poem = result.raw
         
         
     @listen(generate_parameters)
@@ -99,11 +86,7 @@ class PoemFlow(Flow[flowstate]):
                 print("accessed the file")
                 product_data = json.load(file)
                 print(product_data)
-        # except Error as e:
-        #     print(e)
         
-
-            
             conn = mysql.connector.connect(
                 host='localhost',
                 user='yash',
