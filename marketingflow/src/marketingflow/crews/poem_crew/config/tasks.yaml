@@ -1,0 +1,29 @@
+write_product_description:
+  description: >
+    Analyze the {topic} and find the important parameters about the product and 
+    return the result in the form of a json file.
+  expected_output: >
+    the mandatory paramters are : protein per serving, Type of protein, BCAA content, Sugar content, calories per serving, Flavour options,
+    Mixability/ Texture, Certifications, Allergen info, Source of whey, packaging info, Brand reputation.
+    the values for the above keys should be strictly be string enclosed within double quotes.
+    the rest are optional, so add them accordingly but those parameters should be uniform i.e., for each and every protein brand,
+    you should consider only these parameters.
+    I want output in only json format. don't add anything extra other than json like extra characters or special characters that disturb json structure.
+    don't add comments in json file.
+    the output json format should be the following:
+    {
+      "protein_per_serving" : "string",
+      "type_of_protein" : "string",
+      "BCAA_content" : "string",
+      "sugar_content" : "string",
+      "calories_per_serving" : "string",
+      "flavour_options" : "string",
+      "mixability/texture" : "string",
+      "certifications" : "string",
+      "allergen_info" : "string",
+      "source_of_whey" : "string",
+      "packaging_info" : "string",
+      "brand_reputation" : "string"
+    }
+    the string values should be in double quotes and no other values should be in outside the {}.
+  agent: product_researcher
