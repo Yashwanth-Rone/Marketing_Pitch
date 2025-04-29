@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, date
 from marketingflow.crews.poem_crew.poem_crew import PoemCrew
 from marketingflow.crews.poem_crew.pitch_crew import PitchCrew
 import uuid
+import random
 
 class flowstate(BaseModel):
     docs: Any = ''
@@ -25,6 +26,7 @@ class flowstate(BaseModel):
     searches: List[Any] = []
     params: Dict[Any, Any] = {}
     pitch:Any = ''
+    product_params: Any = {}
 
 # class jsonresponse(BaseModel):
 
@@ -67,7 +69,7 @@ class PoemFlow(Flow[flowstate]):
         
     @listen(summartize)
     def generate_parameters(self):
-        print("Generating poem")
+        print("Generating Summary")
         result = (
             PoemCrew()
             .crew()
@@ -77,6 +79,11 @@ class PoemFlow(Flow[flowstate]):
         print("parameters generated", result.raw)
         self.state.params = result.raw
         
+    def search_allergen(self, param):
+        if param:
+            if "soy" in param.lower():
+                return "soy"
+    
         
     @listen(generate_parameters)
     def communicate_with_sql(self):
@@ -103,37 +110,27 @@ class PoemFlow(Flow[flowstate]):
                 cursor.execute("SELECT VERSION();")
                 version = cursor.fetchone()
                 print("🧠 MySQL version:", version)
-
+                allergen = self.search_allergen(product_data["allergen_info"])
+                flavour = product_data["flavour_options"].split(' ')[0]
             
-                add_params = (
-                    "INSERT INTO marketing_pitch "
-                    "(id,protein_per_serving, type_of_protein, BCAA_content, sugar_content, calories_per_serving," \
-                    "flavour_options, mixability_texture, certifications, allergen_info, source_of_whey, packaging_info," \
-                    "brand_reputation) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-                )
-
-                data_params = ('101',
-                    product_data['protein_per_serving'],
-                                 product_data['type_of_protein'],
-                                 product_data['BCAA_content'],
-                                 product_data['sugar_content'],
-                                 product_data['calories_per_serving'],
-                                 product_data['flavour_options'],
-                                 product_data['mixability/texture'],
-                                 product_data['certifications'],
-                                 product_data['allergen_info'],
-                                 product_data['source_of_whey'],
-                                 product_data['packaging_info'],
-                                 product_data['brand_reputation'])
-
                 # Insert employee
-                cursor.execute(add_params, data_params)
-                emp_no = cursor.lastrowid  # Get generated emp_no
+                cursor.execute("select * from marketing_pitch where allergen_info like %s or flavour_options like %s", (f'%{allergen}%', f'%{flavour}%'))
+                retreived = cursor.fetchall()
+                ids = [i[0] for i in cursor.description]
+                vals = [dict(zip(ids, row)) for row in retreived]
+                with open('existing_records.json','w',encoding='utf-8') as file:
+                    json.dump(vals, file)
 
+                # take random record to create marketing pitch
+                with open('existing_records.json','r',encoding='utf-8') as file:
+                    ex_vals = json.load(file)
+                self.state.product_params = random.choice(ex_vals)
+                # print(retreived)
+                records = cursor.lastrowid  # Get generated emp_no
+                print(records)
                 # Commit to DB
                 conn.commit()
-                print("✅ Parameters inserted successfully.")
+                print("✅ Parameters retrieved successfully.")
 
         except Error as e:
             print("❌ Error:", e)
@@ -145,15 +142,23 @@ class PoemFlow(Flow[flowstate]):
             if 'conn' in locals() and conn.is_connected():
                 conn.close()
                 print("🔒 MySQL connection closed.")
+
     
     @listen(communicate_with_sql)
     def pitch_creator(self):
         print("Generating marketing pitch")
-        pitch_res = (
-            PitchCrew()
-            .crew()
-            .kickoff(inputs={"params": self.state.params})
-        )
+        if self.state.product_params:
+            pitch_res = (
+                PitchCrew()
+                .crew()
+                .kickoff(inputs={"params": self.state.product_params})
+            )
+        # else:
+        #     pitch_res = (
+        #         PitchCrew()
+        #         .crew()
+        #         .kickoff(inputs={"params": self.state.params})
+        #     )
 
         print("pitch generated", pitch_res.raw)
         self.state.pitch = pitch_res.raw
