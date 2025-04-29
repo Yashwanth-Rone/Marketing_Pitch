@@ -1,0 +1,7 @@
+pitch_tasker:
+  description: >
+    from the json format {params}, create a marketing template to advertise for the users.
+  expected_output: >
+    create a markdown template for marketing where you take {params} and create a template which is attractive.
+    there should be catchy and creative headings, taglines, benefits, and so on.
+  agent: pitch_generator
